@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculator Web Application</title>
+
+  <style>
+    :root{
+      --bg:#0f1724;
+      --panel:#111827;
+      --accent:#10b981;
+      --muted:#9ca3af;
+      --key-bg:#1f2937;
+      --key-ops:#374151;
+      --screen:#0b1020;
+    }
+
+    *{box-sizing:border-box;font-family:Inter, system-ui, Arial, sans-serif}
+    html,body{
+      height:100%;margin:0;
+      background:linear-gradient(180deg,var(--bg),#020617);
+      display:flex;align-items:center;justify-content:center;padding:24px;
+    }
+
+    .calculator{
+      width:100%;
+      max-width:420px;
+      background:linear-gradient(180deg,var(--panel), #0b1220);
+      border-radius:14px;
+      box-shadow: 0 10px 30px rgba(2,6,23,0.6);
+      padding:18px;
+    }
+
+    .screen{
+      background:var(--screen);
+      color:#e6eef8;
+      font-size:2.1rem;
+      padding:18px;
+      border-radius:10px;
+      text-align:right;
+      min-height:64px;
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      overflow-x:auto;
+    }
+
+    .keys{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:10px;
+    }
+
+    .key{
+      background:var(--key-bg);
+      border:none;
+      padding:18px;
+      font-size:1.15rem;
+      border-radius:10px;
+      color:#e6eef8;
+      cursor:pointer;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.25);
+      user-select:none;
+    }
+
+    .key:active{transform:translateY(1px);box-shadow:none}
+    .key-op{background:var(--key-ops)}
+    .key-eq{
+      background:linear-gradient(180deg,var(--accent),#059669);
+      grid-column:span 1;
+      font-weight:700;
+    }
+    .key-ac{background:#ef4444}
+    .key-del{background:#f59e0b}
+
+    @media (max-width:420px){
+      .screen{font-size:1.6rem;padding:12px}
+      .key{padding:14px;font-size:1rem}
+    }
+  </style>
+</head>
+
+<body>
+  <main class="calculator">
+    <div class="screen" id="screen">0</div>
+    <div class="keys" id="keys">
+      <button class="key key-ac" data-action="clear">AC</button>
+      <button class="key key-del" data-action="delete">⌫</button>
+      <button class="key key-op" data-value="(">(</button>
+      <button class="key key-op" data-value=")">)</button>
+
+      <button class="key" data-value="7">7</button>
+      <button class="key" data-value="8">8</button>
+      <button class="key" data-value="9">9</button>
+      <button class="key key-op" data-value="/">÷</button>
+
+      <button class="key" data-value="4">4</button>
+      <button class="key" data-value="5">5</button>
+      <button class="key" data-value="6">6</button>
+      <button class="key key-op" data-value="*">×</button>
+
+      <button class="key" data-value="1">1</button>
+      <button class="key" data-value="2">2</button>
+      <button class="key" data-value="3">3</button>
+      <button class="key key-op" data-value="-">−</button>
+
+      <button class="key" data-value="0">0</button>
+      <button class="key" data-value=".">.</button>
+      <button class="key key-eq" data-action="equals">=</button>
+      <button class="key key-op" data-value="+">+</button>
+    </div>
+  </main>
+
+  <script>
+    const screen = document.getElementById('screen');
+    const keys = document.getElementById('keys');
+    let expression = '';
+
+    function updateScreen(text) {
+      screen.textContent = text || '0';
+    }
+
+    function clearAll() {
+      expression = '';
+      updateScreen('0');
+    }
+
+    function deleteLast() {
+      expression = expression.slice(0, -1);
+      updateScreen(expression || '0');
+    }
+
+    function appendToExpression(token) {
+      expression += token;
+      updateScreen(expression);
+    }
+
+    function evaluateExpression(expr) {
+      try {
+        const result = Function('"use strict";return (' + expr + ')')();
+        return Number.isFinite(result) ? result : 'Error';
+      } catch {
+        return 'Error';
+      }
+    }
+
+    keys.addEventListener('click', e => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+
+      const action = btn.dataset.action;
+      const value = btn.dataset.value;
+
+      if (action === 'clear') return clearAll();
+      if (action === 'delete') return deleteLast();
+
+      if (action === 'equals') {
+        const res = evaluateExpression(expression);
+        expression = res.toString();
+        updateScreen(expression);
+        return;
+      }
+
+      if (value) appendToExpression(value);
+    });
+
+    window.addEventListener('keydown', e => {
+      if (/\d/.test(e.key)) appendToExpression(e.key);
+      if (['+', '-', '*', '/', '(', ')', '.'].includes(e.key)) appendToExpression(e.key);
+      if (e.key === 'Enter') {
+        const res = evaluateExpression(expression);
+        expression = res.toString();
+        updateScreen(expression);
+      }
+      if (e.key === 'Backspace') deleteLast();
+      if (e.key === 'Escape') clearAll();
+    });
+
+    clearAll();
+  </script>
+</body>
+</html>
